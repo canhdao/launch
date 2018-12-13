@@ -44,18 +44,33 @@ cc.Class({
     // onLoad () {},
 
     start() {
-		console.log(this);
     },
 
     update(dt) {
 		if (this._state == HeadState.LAUNCH) {
 			this.node.y += 50;
+			if (this.node.y > SCREEN_HEIGHT * 0.5) {
+				SCR_Gameplay.instance.gameOver();
+			}
 		}
 	},
 	
 	launch() {
 		if (this._state == HeadState.IDLE) {
 			this._state = HeadState.LAUNCH;
+		}
+	},
+	
+	onCollisionEnter(otherCollider, selfCollider) {
+		if (otherCollider.node.name == "Hole") {
+			this._state = HeadState.IDLE;
+			SCR_Gameplay.instance.tube.getComponent(cc.Animation).stop();
+			SCR_Gameplay.instance.finishLevel();
+		}
+		else if (otherCollider.node.name == "Body") {
+			this._state = HeadState.IDLE;
+			SCR_Gameplay.instance.tube.getComponent(cc.Animation).stop();
+			SCR_Gameplay.instance.gameOver();
 		}
 	}
 });
