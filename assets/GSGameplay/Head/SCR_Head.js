@@ -49,7 +49,7 @@ cc.Class({
     update(dt) {
 		if (this._state == HeadState.LAUNCH) {
 			this.node.y += 50;
-			if (this.node.y > SCREEN_HEIGHT * 0.5) {
+			if (this.node.y > CANVAS_HEIGHT * 0.5) {
 				SCR_Gameplay.instance.gameOver();
 			}
 		}
@@ -62,15 +62,18 @@ cc.Class({
 	},
 	
 	onCollisionEnter(otherCollider, selfCollider) {
-		if (otherCollider.node.name == "Hole") {
-			this._state = HeadState.IDLE;
-			SCR_Gameplay.instance.tube.getComponent(cc.Animation).stop();
-			SCR_Gameplay.instance.finishLevel();
-		}
-		else if (otherCollider.node.name == "Body") {
-			this._state = HeadState.IDLE;
-			SCR_Gameplay.instance.tube.getComponent(cc.Animation).stop();
-			SCR_Gameplay.instance.gameOver();
+		if (SCR_Gameplay.instance._state == GameState.PLAY) {
+			if (otherCollider.node.name == "Hole") {
+				this._state = HeadState.IDLE;
+				this.node.position = SCR_Gameplay.instance.tubeDestination.getComponent("SCR_Tube").getHeadPosition();
+				SCR_Gameplay.instance.tubeDestination.getComponent(cc.Animation).stop();
+				SCR_Gameplay.instance.finishLevel();
+			}
+			else if (otherCollider.node.name == "Body") {
+				this._state = HeadState.IDLE;
+				SCR_Gameplay.instance.tubeDestination.getComponent(cc.Animation).stop();
+				SCR_Gameplay.instance.gameOver();
+			}
 		}
 	}
 });

@@ -1,9 +1,12 @@
-window.SCREEN_WIDTH = 0;
-window.SCREEN_HEIGHT = 0;
+window.canvas = null;
+
+window.CANVAS_WIDTH = 0;
+window.CANVAS_HEIGHT = 0;
 
 window.GameState = cc.Enum({
 	PLAY: 0,
-	GAME_OVER: 1
+	SWITCH_LEVEL: 1,
+	GAME_OVER: 2
 });
 
 window.SCR_Gameplay = cc.Class({
@@ -14,12 +17,22 @@ window.SCR_Gameplay = cc.Class({
 	},
 
     properties: {
+		PFB_TUBE: {
+			default: null,
+			type: cc.Prefab
+		},
+		
         head: {
             default: null,
             type: cc.Node
         },
 		
-		tube: {
+		tubeSource: {
+			default: null,
+			type: cc.Node
+		},
+		
+		tubeDestination: {
 			default: null,
 			type: cc.Node
 		},
@@ -45,8 +58,10 @@ window.SCR_Gameplay = cc.Class({
 		
 		cc.debug.setDisplayStats(false);
 		
-        SCREEN_WIDTH = this.node.width;
-        SCREEN_HEIGHT = this.node.height;
+		canvas = this.node;
+		
+		CANVAS_WIDTH = this.node.width;
+		CANVAS_HEIGHT = this.node.height;
 		
 		this.txtGameOver.active = false;
 		
@@ -69,10 +84,40 @@ window.SCR_Gameplay = cc.Class({
 	},
 	
 	finishLevel: function() {
+		if (this._state != GameState.SWITCH_LEVEL) {
+			// state
+			this._state = GameState.SWITCH_LEVEL;
+			
+			// destination
+			var offset = this.tubeSource.position.sub(this.tubeDestination.position);
+			
+			var moveDestination = cc.moveBy(0.5, offset);
+			var callFunc = cc.callFunc(this.onCompleteSwitchLevel, this);
+			var sequence = cc.sequence(moveDestination, callFunc);
+			
+			this.tubeDestination.runAction(sequence);
+			
+			// head
+			var moveHead = moveDestination.clone();
+			this.head.runAction(moveHead);
+			
+			// source
+			var moveSource = moveDestination.clone();
+			this.tubeSource.runAction(moveSource);
+		}
 	},
 	
 	gameOver: function() {
 		this.txtGameOver.active = true;
 		this._state = GameState.GAME_OVER;
+	},
+	
+	onCompleteSwitchLevel: function() {
+		this.tubeSource.destroy();
+		this.tubeSource = this.tubeDestination;
+		this.tubeDestination = cc.instantiate(this.PFB_TUBE);
+		this.tubeDestination.parent = canvas;
+		
+		this._state = GameState.PLAY;
 	}
 });
